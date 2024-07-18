@@ -1,0 +1,74 @@
+---
+# tasks file for db
+
+
+- name: Install postgresql
+  apt:
+      name: postgresql
+      state: present
+
+- name: Check postgresql status
+  service:
+      name: postgresql
+      state: started
+      enabled: yes
+
+- name: Install dependencies
+  apt:
+      name: [pkg-config, python3-dev, default-libmysqlclient-dev, python3-pip]
+      state: present
+
+- name: Install python dependencies
+  pip:
+      name: [mysqlclient, psycopg2-binary]
+      state: present
+      extra_args: "--ignore-installed --break-system-packages"
+
+
+- name: "Allow md5 connection for the db user"
+  postgresql_pg_hba:
+    dest: "/var/lib/postgres/data/pg_hba.conf"
+    contype: host
+    databases: all
+    method: trust
+    users: "{{ db_user }}"
+    create: true
+  become: yes
+  become_user: postgres
+  notify: restart postgres
+
+- name: Restart PostgreSql
+  service:
+    name: postgresql
+    state: restarted
+
+- name: Create db
+  postgresql_db:
+    name: "{{ db_name }}"
+    state: present
+
+- name: "Create db user"
+  postgresql_user:
+    state: present
+    name: "{{ db_user }}"
+    password: "{{ db_pass }}"
+  become: yes
+  become_user: postgres
+
+- name: Grant all privileges to user on schema
+  postgresql_privs:
+    db: "{{ db_name }}"
+    type: schema
+    privs: ALL
+    roles: "{{ db_user }}"
+    objs: public
+
+- name: "Grant user access to db"
+  postgresql_privs:
+    type: database
+    database: "{{ db_name }}"
+    roles: "{{ db_user }}"
+    grant_option: no
+    privs: all
+  become: yes
+  become_user: postgres

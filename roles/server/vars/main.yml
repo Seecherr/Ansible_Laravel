@@ -1,0 +1,6 @@
+---
+# vars file for server
+repo_url: 'https://github.com/Practical-DevOps/app-for-devops'
+project_directory: /var/www/html/
+node_version: '16'
+

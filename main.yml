@@ -1,0 +1,13 @@
+---
+
+- name: Set Up the db
+  hosts: db
+  become: yes
+  roles:
+    - db
+
+- name: Set up the server
+  hosts: server
+  become: yes
+  roles:
+    - server
